@@ -1,0 +1,1 @@
+export { default as Capture } from './components/Capture.svelte';
