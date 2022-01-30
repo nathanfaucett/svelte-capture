@@ -3,7 +3,6 @@
 
 	let capture = false;
 	function onClick() {
-		console.log();
 		capture = true;
 	}
 

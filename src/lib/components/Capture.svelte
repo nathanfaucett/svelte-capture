@@ -127,15 +127,23 @@
 		}
 	}
 	function getDevices() {
-		navigator.mediaDevices.enumerateDevices().then((d) => {
-			devices = d.filter((device) => device.kind === 'videoinput');
-			if (currentDevice >= devices.length) {
-				currentDevice = 0;
-			}
-			getMediaStream();
-		});
+		navigator.mediaDevices
+			.enumerateDevices()
+			.then((devices) => devices.filter((device) => device.kind === 'videoinput'))
+			.then((d) => {
+				devices = d;
+				if (currentDevice >= devices.length) {
+					currentDevice = 0;
+				}
+				getMediaStream();
+			});
 	}
+	let openingMediaStream = false;
 	function getMediaStream() {
+		if (openingMediaStream) {
+			return;
+		}
+		openingMediaStream = true;
 		closeMediaStream();
 		navigator.mediaDevices
 			.getUserMedia({
@@ -145,19 +153,36 @@
 				audio
 			})
 			.then((stream) => {
+				let muted = false;
 				let maxWidth = 0;
 				let maxHeight = 0;
 				stream.getVideoTracks().forEach((track) => {
 					const settings = track.getSettings();
 					maxWidth = Math.max(maxWidth, settings.width);
 					maxHeight = Math.max(maxHeight, settings.height);
+					if (track.muted) {
+						muted = track.muted;
+					}
 				});
-				videoWidth = maxWidth;
-				videoHeight = maxHeight;
-				width = videoWidth * ratio;
-				height = videoHeight * ratio;
-				mediaStream = stream;
-				player.srcObject = stream;
+				if (muted) {
+					onSwitch();
+					getMediaStream();
+				} else {
+					videoWidth = maxWidth;
+					videoHeight = maxHeight;
+					mediaStream = stream;
+					player.srcObject = stream;
+
+					ratio =
+						videoWidth > innerWidth || videoHeight > innerHeight
+							? Math.min(innerWidth / videoWidth, innerHeight / videoHeight)
+							: 1;
+					width = videoWidth * ratio;
+					height = videoHeight * ratio;
+				}
+			})
+			.finally(() => {
+				openingMediaStream = false;
 			});
 	}
 
