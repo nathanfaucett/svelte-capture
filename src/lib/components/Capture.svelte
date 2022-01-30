@@ -96,15 +96,17 @@
 			}
 		}
 	}
-	$: onCaptureImage = () =>
+	function onCaptureImage() {
 		tick()
 			.then(() => captureImage(canvas, player))
 			.then((blob) => dispatch('image', blob));
+	}
 
-	$: onCaptureVideo = () =>
+	function onCaptureVideo() {
 		tick()
 			.then(getCapturedVideo)
 			.then((blob) => dispatch('video', blob));
+	}
 
 	onMount(() => {
 		window.document.addEventListener('mouseup', onEnd);
@@ -152,6 +154,8 @@
 				});
 				videoWidth = maxWidth;
 				videoHeight = maxHeight;
+				width = videoWidth * ratio;
+				height = videoHeight * ratio;
 				mediaStream = stream;
 				player.srcObject = stream;
 			});
