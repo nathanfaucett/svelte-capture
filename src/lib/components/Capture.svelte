@@ -220,9 +220,11 @@
 	<button class="btn close" on:click={onClose}>
 		<MdClose />
 	</button>
-	<button class="btn switch" on:click={onSwitch}>
-		<MdSwitchCamera />
-	</button>
+	{#if devices.length > 1}
+		<button class="btn switch" on:click={onSwitch}>
+			<MdSwitchCamera />
+		</button>
+	{/if}
 	<button
 		class="btn capture"
 		class:active={captureDown}
