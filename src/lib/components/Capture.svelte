@@ -111,10 +111,14 @@
 	onMount(() => {
 		window.document.addEventListener('mouseup', onEnd);
 		window.document.addEventListener('mouseleave', onEnd);
+		window.document.addEventListener('touchend', onEnd);
+		window.document.addEventListener('touchcancel', onEnd);
 
 		return () => {
 			window.document.removeEventListener('mouseup', onEnd);
 			window.document.removeEventListener('mouseleave', onEnd);
+			window.document.removeEventListener('touchend', onEnd);
+			window.document.removeEventListener('touchcancel', onEnd);
 			closeMediaStream();
 		};
 	});
