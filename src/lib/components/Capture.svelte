@@ -33,6 +33,7 @@
 	import MdClose from 'svelte-icons/md/MdClose.svelte';
 	import MdRadioButtonChecked from 'svelte-icons/md/MdRadioButtonChecked.svelte';
 	import MdRadioButtonUnchecked from 'svelte-icons/md/MdRadioButtonUnchecked.svelte';
+	import MdSwitchCamera from 'svelte-icons/md/MdSwitchCamera.svelte';
 	import { createEventDispatcher, onMount, tick } from 'svelte/internal';
 	import Modal from './Modal.svelte';
 
@@ -57,6 +58,10 @@
 
 	function onClose() {
 		open = false;
+	}
+	function onSwitch() {
+		currentDevice = currentDevice >= devices.length - 1 ? 0 : currentDevice + 1;
+		getMediaStream();
 	}
 	function onStart(event: MouseEvent | TouchEvent) {
 		if (event.type === 'mousedown' && event['button'] !== 0) {
@@ -108,18 +113,33 @@
 		return () => {
 			window.document.removeEventListener('mouseup', onEnd);
 			window.document.removeEventListener('mouseleave', onEnd);
+			closeMediaStream();
 		};
 	});
 
-	let innerWidth: number;
-	let innerHeight: number;
-	let videoWidth = 1;
-	let videoHeight = 1;
-
-	$: if (open && player && !mediaStream && typeof navigator.mediaDevices !== 'undefined') {
+	function closeMediaStream() {
+		if (mediaStream) {
+			mediaStream.getTracks().forEach((track) => track.stop());
+			mediaStream = undefined;
+			player.srcObject = undefined;
+		}
+	}
+	function getDevices() {
+		navigator.mediaDevices.enumerateDevices().then((d) => {
+			devices = d.filter((device) => device.kind === 'videoinput');
+			if (currentDevice >= devices.length) {
+				currentDevice = 0;
+			}
+			getMediaStream();
+		});
+	}
+	function getMediaStream() {
+		closeMediaStream();
 		navigator.mediaDevices
 			.getUserMedia({
-				video: true,
+				video: {
+					deviceId: devices[currentDevice]?.deviceId
+				},
 				audio
 			})
 			.then((stream) => {
@@ -136,10 +156,19 @@
 				player.srcObject = stream;
 			});
 	}
+
+	let innerWidth: number;
+	let innerHeight: number;
+	let videoWidth = 1;
+	let videoHeight = 1;
+
+	let devices: MediaDeviceInfo[] = [];
+	let currentDevice = 0;
+	$: if (open && !mediaStream && typeof navigator.mediaDevices !== 'undefined') {
+		getDevices();
+	}
 	$: if (!open && mediaStream) {
-		mediaStream.getTracks().forEach((track) => track.stop());
-		mediaStream = undefined;
-		player.srcObject = undefined;
+		closeMediaStream();
 	}
 
 	$: ratio =
@@ -157,6 +186,9 @@
 	<video bind:this={player} autoplay {width} {height} />
 	<button class="btn close" on:click={onClose}>
 		<MdClose />
+	</button>
+	<button class="btn switch" on:click={onSwitch}>
+		<MdSwitchCamera />
 	</button>
 	<button
 		class="btn capture"
@@ -190,15 +222,21 @@
 	.close {
 		width: 2rem;
 		height: 2rem;
-		top: 0;
-		right: 0;
+		top: 0.5rem;
+		right: 0.5rem;
 	}
 	.capture {
 		width: 4rem;
 		height: 4rem;
-		bottom: 0;
+		bottom: 0.5rem;
 		right: 50%;
 		margin-right: -2rem;
+	}
+	.switch {
+		width: 3rem;
+		height: 3rem;
+		right: 0.5rem;
+		bottom: 0.5rem;
 	}
 	.capture .checked {
 		display: none;

@@ -28,7 +28,7 @@
 	<video src={videoUrl} controls />
 {/if}
 
-<Capture bind:open={capture} audio video on:image={onImageCapture} on:video={onVideoCapture} />
+<Capture bind:open={capture} video on:image={onImageCapture} on:video={onVideoCapture} />
 
 <style>
 	img,
